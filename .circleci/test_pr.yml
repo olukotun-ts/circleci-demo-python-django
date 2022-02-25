@@ -1,0 +1,115 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@2.0.1
+
+jobs:
+  test:
+    docker:
+      - image: cimg/python@3.8.12-browsers
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD 
+      - image: cimg/postgres@12.9
+        # Doesn't seem to expose port config option. Consider docker compose if default port 5432 is not useable.
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+        environment:
+          POSTGRES_DB: sl_pg
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        command: ["--health-cmd pg_isready", "--health-interval 3s", "--health-timeout 3s", "--health-retries 15"]
+      - image: rethinkdb:2.4.0
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+        name: rethinkdb-backend
+        environment:
+          driver.port: 5555
+      - image: rethinkdb:2.4.0
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+        name: rethinkdb-frontend
+        environment:
+          driver.port: 5550
+      - image: influxdb:1.8-alpine
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+        environment:
+          INFLUXDB_HTTP_BIND_ADDRESS: 8086
+      - image: elasticsearch:7.17.0   # Updated image version scanned for Log4Shell CVE https://hub.docker.com/_/elasticsearch?tab=tags&page=1&name=7.
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+        environment:
+          discovery.type: single-node
+          ES_JAVA_OPTS: "-Xms256m -Xmx256m"
+          http.port: 9222
+    steps:
+      - run:
+          name: Checkout with lfs
+          command: | 
+            echo "Enter custom checkout command"
+      - run:
+          name: Ensure commits are in develop
+          command: |
+            git fetch
+            git checkout develop
+            git checkout staging
+            git checkout ${CIRCLE_SHA1}
+
+            pip install gitpython
+            python -c '
+              import os
+              import sys
+
+              from git import Repo
+
+              repo = Repo(".")
+              staging_commits = set(x.hexsha for x in repo.iter_commits("staging"))
+              develop_commits = set(x.hexsha for x in repo.iter_commits("develop"))
+
+              commits_missing_from_develop = staging_commits.difference(develop_commits)
+
+              print("Listing Commits Missing from Develop Branch")
+              print("-------------------------------------------")
+              for commit in commits_missing_from_develop:
+                  print(commit)
+
+              sys.exit(0 if len(commits_missing_from_develop) == 0 else 1)
+            '
+      - restore_cache:
+          key: venv-${{ arch }}-${{ .Branch }}-${{ checksum('setup.py') }}
+      - run:
+          name: Install dependencies
+          command: |
+            python -m venv venv
+            source venv/bin/activate
+            python -m pip install --upgrade pip
+            python -m pip install "setuptools==57.4.0"
+            python -m pip install --upgrade wheel
+            pip install --use-feature=2020-resolver -e ".[dev]"
+            python -m spacy download en_core_web_sm
+      - save_cache:
+          key: venv-${{ arch }}-${{ checksum('setup.py') }}
+          paths:
+            - venv
+      - run:
+          name: Run tests
+          environment:
+            DISABLE_PSQL_SSL: true
+          command: |
+            source venv/bin/activate
+            export SL_BASE=..
+            pytest --skip-slow
+
+workflows:
+  version: 2
+  run-tests:
+    jobs:
+      - test_pr
+      
