@@ -12,6 +12,7 @@ jobs:
           password: $DOCKERHUB_PASSWORD 
     steps:
       - checkout
+      - setup_remote_docker
       # - restore_cache:
       #     key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
       # - run:
