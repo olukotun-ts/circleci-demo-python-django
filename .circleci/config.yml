@@ -12,31 +12,31 @@ jobs:
           password: $DOCKERHUB_PASSWORD 
     steps:
       - checkout
-      - restore_cache:
-          key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
-      - run:
-          name: Install dependencies
-          command: |
-            python -m venv venv
-            source venv/bin/activate
-            python -m pip install --upgrade pip
-            python -m pip install "setuptools==57.4.0"
-            python -m pip install --upgrade wheel
-            pip install --use-feature=2020-resolver -e ".[dev]"
-            python -m spacy download en_core_web_sm
-      - save_cache:
-          key: venv-${{ arch }}-${{ checksum "setup.py" }}
-          paths:
-            - venv
+      # - restore_cache:
+      #     key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
+      # - run:
+      #     name: Install dependencies
+      #     command: |
+      #       python -m venv venv
+      #       source venv/bin/activate
+      #       python -m pip install --upgrade pip
+      #       python -m pip install "setuptools==57.4.0"
+      #       python -m pip install --upgrade wheel
+      #       pip install --use-feature=2020-resolver -e ".[dev]"
+      #       python -m spacy download en_core_web_sm
+      # - save_cache:
+      #     key: venv-${{ arch }}-${{ checksum "setup.py" }}
+      #     paths:
+      #       - venv
       - run:
           name: Run tests
           environment:
             DISABLE_PSQL_SSL: true
             SL_BASE: ..
           command: |
-            source venv/bin/activate
+            # source venv/bin/activate
             docker-compose -f .circleci/docker-compose.yml up -d
-            pytest --skip-slow
+            # pytest --skip-slow
 
 workflows:
   version: 2
