@@ -1,5 +1,9 @@
 version: "3.8"
 
+networks:
+  default:
+    external: true
+
 services:
   postgres:
     image: cimg/postgres:12.9

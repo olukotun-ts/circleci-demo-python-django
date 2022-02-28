@@ -41,10 +41,26 @@ jobs:
             sudo apt-get install -y postgresql-client
             psql postgresql://test:test@0.0.0.0:5534/sl_pg < .circleci/test-db/schema.sql
             # pytest --skip-slow
+  machine-test:
+    machine:
+      - image: ubuntu-2004:202201-02
+    steps:
+      - checkout
+      - run:
+          name: Run tests
+          environment:
+            DISABLE_PSQL_SSL: true
+            SL_BASE: ..
+          command: |
+            docker-compose -f .circleci/docker-compose.yml up -d
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+            psql postgresql://test:test@0.0.0.0:5534/sl_pg < .circleci/test-db/schema.sql
 
 workflows:
   version: 2
   run-tests:
     jobs:
       - test
+      - machine-test
       
