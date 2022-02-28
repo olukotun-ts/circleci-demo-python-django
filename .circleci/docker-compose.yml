@@ -5,12 +5,21 @@ services:
     image: cimg/postgres:12.9
     ports:
       - "5534:5432"
-    command: --health-cmd pg_isready --health-interval 3s --health-timeout 3s --health-retries 15
     environment:
       POSTGRES_DB: sl_pg
       POSTGRES_HOST: localhost
       POSTGRES_USER: test
       POSTGRES_PASSWORD: test
+    healthcheck:
+      test: ["CMD", "pg_isready"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+    depends_on:
+      - rethinkdb-backend
+      - rethinkdb-frontend
+      - influxdb
+      - elasticsearch
 
   rethinkdb-backend:
     image: rethinkdb:2.4.0

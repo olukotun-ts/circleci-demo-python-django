@@ -99,3 +99,4 @@ ENV/
 .ropeproject
 
 process.yml
+.DS_Store

@@ -37,6 +37,7 @@ jobs:
           command: |
             # source venv/bin/activate
             docker-compose -f .circleci/docker-compose.yml up -d
+            psql -U test < .circleci/test-db/seed-db.sh
             # pytest --skip-slow
 
 workflows:
