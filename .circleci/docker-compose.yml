@@ -1,15 +1,10 @@
 version: "3.8"
 
-networks:
-  default:
-    external:
-      name: host
-
 services:
   postgres:
     image: cimg/postgres:12.9
-    # ports:
-    #   - "5534:5432"
+    ports:
+      - "5534:5432"
     environment:
       POSTGRES_DB: sl_pg
       POSTGRES_HOST: localhost
@@ -28,23 +23,23 @@ services:
 
   rethinkdb-backend:
     image: rethinkdb:2.4.0
-    # ports:
-    #   - "5555:28015"
+    ports:
+      - "5555:28015"
 
   rethinkdb-frontend:
     image: rethinkdb:2.4.0
-    # ports:
-    #   - "5550:28015"
+    ports:
+      - "5550:28015"
 
   influxdb:
     image: influxdb:1.8-alpine
-    # ports:
-    #   - "8086:8086"
+    ports:
+      - "8086:8086"
 
   elasticsearch:
     image: elasticsearch:7.17.0
-    # ports:
-    #   - "9222:9200"
+    ports:
+      - "9222:9200"
     environment:
       discovery.type: single-node
       ES_JAVA_OPTS: -Xms256m -Xmx256m
