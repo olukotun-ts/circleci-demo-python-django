@@ -9,17 +9,12 @@ jobs:
           password: $DOCKERHUB_PASSWORD 
     steps:
       - checkout
-      - setup_remote_docker
       - run: 
-          name: Set alias
+          name: Set Python version
           command: |
             python --version
-            alias python=$(which python3)
-            python --version
-      - run: python --version
-      - run: 
-          name: Persist alias
-          command: echo "alias python=$(which python3)" >> $BASH_ENV
+            pyenv install 3.9.4
+            pyenv global 3.9.4
       - run: python --version
       # - restore_cache:
       #     key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
@@ -55,15 +50,11 @@ jobs:
     steps:
       - checkout
       - run: 
-          name: Set alias
+          name: Set Python version
           command: |
             python --version
-            alias python=$(which python3)
-            python --version
-      - run: python --version
-      - run: 
-          name: Persist alias
-          command: echo "alias python=$(which python3)" >> $BASH_ENV
+            pyenv install 3.9.4
+            pyenv global 3.9.4
       - run: python --version
       # - run:
       #     name: Run tests
