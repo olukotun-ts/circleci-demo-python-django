@@ -59,7 +59,7 @@ jobs:
           POSTGRES_HOST: localhost
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
-        command: --health-cmd pg_isready --health-interval 3s --health-timeout 3s --health-retries 15
+        # command: --health-cmd pg_isready --health-interval 3s --health-timeout 3s --health-retries 15
       - image: rethinkdb:2.4.0
         auth:
           username: $DOCKERHUB_USER
