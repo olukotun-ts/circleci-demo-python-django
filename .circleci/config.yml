@@ -17,12 +17,12 @@ jobs:
           name: Set alias
           command: |
             which python
-            alias python='/usr/bin/python3'
+            alias python=$(which python3)
             which python
       - run: which python
       - run: 
           name: Persist alias
-          command: echo "alias python='/usr/bin/python3'" >> $BASH_ENV
+          command: echo "alias python=$(which python3)" >> $BASH_ENV
       - run: which python
       # - restore_cache:
       #     key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
