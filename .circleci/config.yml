@@ -46,16 +46,26 @@ jobs:
       #       # pytest --skip-slow
   machine-test:
     machine:
-      image: ubuntu-2004:202201-02
+      image: ubuntu-2004:202104-01
     steps:
       - checkout
       - run: 
           name: Set Python version
           command: |
             python --version
-            pyenv install 3.9.4
+            pyenv versions
             pyenv global 3.9.4
       - run: python --version
+      - run:
+          name: Install dependencies
+          command: |
+            python -m venv venv
+            source venv/bin/activate
+            python -m pip install --upgrade pip
+            python -m pip install "setuptools==57.4.0"
+            python -m pip install --upgrade wheel
+            pip install --use-feature=2020-resolver -e ".[dev]"
+            python -m spacy download en_core_web_sm
       # - run:
       #     name: Run tests
       #     environment:
@@ -71,6 +81,6 @@ workflows:
   version: 2
   run-tests:
     jobs:
-      - test
+      # - test
       - machine-test
       
