@@ -49,7 +49,7 @@ jobs:
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
-      - image: cimg/postgres@12.9
+      - image: cimg/postgres:12.9
         # Doesn't seem to expose port config option. Consider docker compose if default port 5432 is not useable.
         auth:
           username: $DOCKERHUB_USER
