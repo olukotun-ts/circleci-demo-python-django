@@ -1,54 +1,8 @@
 version: 2.1
 
-jobs:
-  test:
-    docker:
-      - image: cimg/python:3.8.12-browsers
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD 
+commands:
+  set-python-version:
     steps:
-      - checkout
-      - run: 
-          name: Set Python version
-          command: |
-            python --version
-            pyenv install 3.9.4
-            pyenv global 3.9.4
-      - run: python --version
-      # - restore_cache:
-      #     key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
-      # - run:
-      #     name: Install dependencies
-      #     command: |
-      #       python -m venv venv
-      #       source venv/bin/activate
-      #       python -m pip install --upgrade pip
-      #       python -m pip install "setuptools==57.4.0"
-      #       python -m pip install --upgrade wheel
-      #       pip install --use-feature=2020-resolver -e ".[dev]"
-      #       python -m spacy download en_core_web_sm
-      # - save_cache:
-      #     key: venv-${{ arch }}-${{ checksum "setup.py" }}
-      #     paths:
-      #       - venv
-      # - run:
-      #     name: Run tests
-      #     environment:
-      #       DISABLE_PSQL_SSL: true
-      #       SL_BASE: ..
-      #     command: |
-      #       # source venv/bin/activate
-      #       docker-compose -f .circleci/docker-compose.yml up -d
-      #       sudo apt-get update
-      #       sudo apt-get install -y postgresql-client
-      #       psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql
-      #       # pytest --skip-slow
-  machine-test:
-    machine:
-      image: ubuntu-2004:202104-01
-    steps:
-      - checkout
       - run: 
           name: Set Python version
           command: |
@@ -56,6 +10,10 @@ jobs:
             pyenv versions
             pyenv global 3.9.4
       - run: python --version
+  install-dependencies:
+    steps:
+      - restore_cache:
+          key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
       - run:
           name: Install dependencies
           command: |
@@ -67,21 +25,86 @@ jobs:
             pip install --use-feature=2020-resolver -e ".[dev]"
             pip install -U spacy
             python -m spacy download en_core_web_sm
-      # - run:
-      #     name: Run tests
-      #     environment:
-      #       DISABLE_PSQL_SSL: true
-      #       SL_BASE: ..
-      #     command: |
-      #       docker-compose -f .circleci/docker-compose.yml up -d
-      #       sudo apt-get update
-      #       sudo apt-get install -y postgresql-client
-      #       psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql
+      - save_cache:
+          key: venv-${{ arch }}-${{ checksum "setup.py" }}
+          paths:
+            - venv
+  test-compose:
+    steps:
+      - run:
+          name: Run tests
+          environment:
+            DISABLE_PSQL_SSL: true
+            SL_BASE: ..
+          command: |
+            docker-compose -f .circleci/docker-compose.yml up -d
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+            psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql
+
+jobs:
+  test:
+    docker:
+      - image: cimg/python:3.8.12-browsers
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+      - image: cimg/postgres@12.9
+        # Doesn't seem to expose port config option. Consider docker compose if default port 5432 is not useable.
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+        environment:
+          POSTGRES_DB: sl_pg
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        command: ["--health-cmd", "pg_isready", "--health-interval", "3s", "--health-timeout", "3s", "--health-retries", "15"]
+      - image: rethinkdb:2.4.0
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+        name: rethinkdb-backend
+        environment:
+          driver.port: 5555
+      - image: rethinkdb:2.4.0
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+        name: rethinkdb-frontend
+        environment:
+          driver.port: 5550
+      - image: influxdb:1.8-alpine
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+        environment:
+          INFLUXDB_HTTP_BIND_ADDRESS: 8086
+      - image: elasticsearch:7.17.0   # Updated image version scanned for Log4Shell CVE https://hub.docker.com/_/elasticsearch?tab=tags&page=1&name=7.
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
+        environment:
+          discovery.type: single-node
+          ES_JAVA_OPTS: "-Xms256m -Xmx256m"
+          http.port: 9222
+    steps:
+      - checkout
+      - install-dependencies
+
+  machine-test:
+    machine:
+      image: ubuntu-2004:202104-01
+    steps:
+      - checkout
+      - set-python-version
+      - install-dependencies
+      - test-compose
 
 workflows:
   version: 2
   run-tests:
     jobs:
-      # - test
-      - machine-test
+      - test
+      # - machine-test
       
