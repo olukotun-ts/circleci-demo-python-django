@@ -88,6 +88,7 @@ jobs:
           discovery.type: single-node
           ES_JAVA_OPTS: "-Xms256m -Xmx256m"
           http.port: 9222
+      - image: tomgeorge/sleep-infinity:latest
     steps:
       - checkout
       - install-dependencies
