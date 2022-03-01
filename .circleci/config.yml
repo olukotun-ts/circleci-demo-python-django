@@ -13,6 +13,17 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - run: 
+          name: Set alias
+          command: |
+            which python
+            alias python='/usr/bin/python3'
+            which python
+      - run: which python
+      - run: 
+          name: Persist alias
+          command: echo "alias python='/usr/bin/python3'" >> $BASH_ENV
+      - run: which python
       # - restore_cache:
       #     key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
       # - run:
@@ -29,18 +40,18 @@ jobs:
       #     key: venv-${{ arch }}-${{ checksum "setup.py" }}
       #     paths:
       #       - venv
-      - run:
-          name: Run tests
-          environment:
-            DISABLE_PSQL_SSL: true
-            SL_BASE: ..
-          command: |
-            # source venv/bin/activate
-            docker-compose -f .circleci/docker-compose.yml up -d
-            sudo apt-get update
-            sudo apt-get install -y postgresql-client
-            psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql
-            # pytest --skip-slow
+      # - run:
+      #     name: Run tests
+      #     environment:
+      #       DISABLE_PSQL_SSL: true
+      #       SL_BASE: ..
+      #     command: |
+      #       # source venv/bin/activate
+      #       docker-compose -f .circleci/docker-compose.yml up -d
+      #       sudo apt-get update
+      #       sudo apt-get install -y postgresql-client
+      #       psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql
+      #       # pytest --skip-slow
   machine-test:
     machine:
       image: ubuntu-2004:202201-02
@@ -62,5 +73,5 @@ workflows:
   run-tests:
     jobs:
       - test
-      - machine-test
+      # - machine-test
       
