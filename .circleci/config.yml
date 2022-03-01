@@ -57,21 +57,32 @@ jobs:
       image: ubuntu-2004:202201-02
     steps:
       - checkout
-      - run:
-          name: Run tests
-          environment:
-            DISABLE_PSQL_SSL: true
-            SL_BASE: ..
+      - run: 
+          name: Set alias
           command: |
-            docker-compose -f .circleci/docker-compose.yml up -d
-            sudo apt-get update
-            sudo apt-get install -y postgresql-client
-            psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql
+            which python
+            alias python=$(which python3)
+            which python
+      - run: which python
+      - run: 
+          name: Persist alias
+          command: echo "alias python=$(which python3)" >> $BASH_ENV
+      - run: which python
+      # - run:
+      #     name: Run tests
+      #     environment:
+      #       DISABLE_PSQL_SSL: true
+      #       SL_BASE: ..
+      #     command: |
+      #       docker-compose -f .circleci/docker-compose.yml up -d
+      #       sudo apt-get update
+      #       sudo apt-get install -y postgresql-client
+      #       psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql
 
 workflows:
   version: 2
   run-tests:
     jobs:
-      - test
-      # - machine-test
+      # - test
+      - machine-test
       
