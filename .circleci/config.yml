@@ -79,7 +79,7 @@ jobs:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
         environment:
-          INFLUXDB_HTTP_BIND_ADDRESS: 8086
+          INFLUXDB_HTTP_BIND_ADDRESS: 127.0.0.1:8086
       - image: elasticsearch:7.17.0   # Updated image version scanned for Log4Shell CVE https://hub.docker.com/_/elasticsearch?tab=tags&page=1&name=7.
         auth:
           username: $DOCKERHUB_USER
