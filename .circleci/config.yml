@@ -1,8 +1,5 @@
 version: 2.1
 
-orbs:
-  python: circleci/python@2.0.1
-
 jobs:
   test:
     docker:
@@ -16,14 +13,14 @@ jobs:
       - run: 
           name: Set alias
           command: |
-            which python
+            python --version
             alias python=$(which python3)
-            which python
-      - run: which python
+            python --version
+      - run: python --version
       - run: 
           name: Persist alias
           command: echo "alias python=$(which python3)" >> $BASH_ENV
-      - run: which python
+      - run: python --version
       # - restore_cache:
       #     key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
       # - run:
@@ -60,14 +57,14 @@ jobs:
       - run: 
           name: Set alias
           command: |
-            which python
+            python --version
             alias python=$(which python3)
-            which python
-      - run: which python
+            python --version
+      - run: python --version
       - run: 
           name: Persist alias
           command: echo "alias python=$(which python3)" >> $BASH_ENV
-      - run: which python
+      - run: python --version
       # - run:
       #     name: Run tests
       #     environment:
@@ -83,6 +80,6 @@ workflows:
   version: 2
   run-tests:
     jobs:
-      # - test
+      - test
       - machine-test
       
