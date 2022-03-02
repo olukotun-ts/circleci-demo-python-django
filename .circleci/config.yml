@@ -54,6 +54,7 @@ jobs:
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
+        name: postgres
         environment:
           POSTGRES_DB: sl_pg
           POSTGRES_HOST: localhost
