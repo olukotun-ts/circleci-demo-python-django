@@ -1,0 +1,89 @@
+name: tests with matrix
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        postgres-version: ['11']
+    timeout-minutes: 20
+
+    services:
+      postgres:
+        image: postgres:${{ matrix.postgres-version }}
+        env:
+          POSTGRES_DB: sl_pg
+          POSTGRES_HOST: localhost
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5534:5432
+        options: --health-cmd pg_isready --health-interval 3s --health-timeout 3s --health-retries 15
+
+      rethinkdb-backend:
+        image: rethinkdb:2.4.0
+        ports:
+          - 5555:28015
+
+      rethinkdb-frontend:
+        image: rethinkdb:2.4.0
+        ports:
+          - 5550:28015
+
+      influxdb:
+        image: influxdb:1.8-alpine
+        ports:
+          - 8086:8086
+
+      elasticsearch:
+        image: elasticsearch:7.12.1
+        ports:
+          - 9222:9200
+        options: -e="discovery.type=single-node" -e="ES_JAVA_OPTS=-Xms256m -Xmx256m"
+
+    steps:
+
+    - name: set up python 3.8
+      uses: actions/setup-python@v1
+      with:
+        python-version: 3.8
+
+    - name: get full python version
+      id: full-python-version
+      shell: bash
+      run: echo ::set-output name=version::$(python -c "import sys; print('-'.join(str(v) for v in sys.version_info))")
+
+    - name: checkout sl
+      uses: actions/checkout@v2
+      with:
+        lfs: false
+
+    - name: cache dependencies
+      id: sl-cache
+      uses: actions/cache@v2
+      with:
+        path: venv
+        key: venv-${{ runner.os }}-${{ steps.full-python-version.outputs.version }}-${{ hashFiles('setup.py') }}
+
+    - name: install sl
+      if: steps.sl-cache.outputs.cache-hit != 'true'
+      run: |
+        python -m venv venv
+        source venv/bin/activate
+        python -m pip install --upgrade pip
+        python -m pip install "setuptools==57.4.0"
+        python -m pip install --upgrade wheel
+        pip install --use-feature=2020-resolver -e ".[dev]"
+        python -m spacy download en_core_web_sm
+
+    - name: run tests
+      env:
+          DISABLE_PSQL_SSL: true
+      run: |
+        source venv/bin/activate
+        export SL_BASE=..
+        pytest --skip-slow
