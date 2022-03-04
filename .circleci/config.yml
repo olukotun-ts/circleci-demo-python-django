@@ -8,7 +8,8 @@ commands:
           command: |
             python --version
             pyenv versions
-            pyenv global 3.9.4
+            pyenv install 3.9.7
+            pyenv global 3.9.7
       - run: python --version
   install-dependencies:
     steps:
@@ -96,7 +97,7 @@ jobs:
 
   machine-test:
     machine:
-      image: ubuntu-2004:202104-01
+      image: ubuntu-2004:202201-02
     steps:
       - checkout
       - set-python-version
@@ -107,6 +108,6 @@ workflows:
   version: 2
   run-tests:
     jobs:
-      - test
-      # - machine-test
+      # - test
+      - machine-test
       
