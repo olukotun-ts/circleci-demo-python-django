@@ -8,13 +8,14 @@ commands:
           command: |
             python --version
             pyenv versions
-            pyenv install 3.9.7
-            pyenv global 3.9.7
+            pyenv install 3.9.9
+            pyenv global 3.9.9
       - run: python --version
   install-dependencies:
     steps:
       - restore_cache:
           key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
+      - run: python --version
       - run:
           name: Install dependencies
           command: |
