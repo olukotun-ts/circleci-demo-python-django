@@ -2,7 +2,9 @@ version: "3.8"
 
 services:
   tester:
-    image: tester:latest
+    image: cimg/python:3.9.9
+    stdin_open: true
+    tty: true
     depends_on:
       # https://stackoverflow.com/a/55835081
       postgres:

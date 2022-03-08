@@ -1,16 +1,6 @@
 version: 2.1
 
 commands:
-  set-python-version:
-    steps:
-      - run: 
-          name: Set Python version
-          command: |
-            python --version
-            pyenv versions
-            pyenv install 3.9.9
-            pyenv global 3.9.9
-      - run: python --version
   install-dependencies:
     steps:
       - restore_cache:
@@ -28,41 +18,57 @@ commands:
             pip install -U spacy
             python -m spacy download en_core_web_sm
       - save_cache:
-          key: venv-${{ arch }}-${{ checksum "setup.py" }}
+          key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
           paths:
             - venv
-  test-compose:
+jobs:
+  docker-compose:
+    docker:
+      - image: cimg/base:stable
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
     steps:
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - checkout
       - run:
-          name: Run tests
+          name: Test Postgres connection
           environment:
             DISABLE_PSQL_SSL: true
             SL_BASE: ..
           command: |
-            docker-compose -f .circleci/docker-compose.yml up -d
-            sudo apt-get update
-            sudo apt-get install -y postgresql-client
-            psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql
-
-jobs:
-  test:
+            docker-compose up -d
+            docker-compose exec tester sudo apt-get update && \
+              sudo apt-get install -y postgresql-client && \
+              psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql && \
+      - run:
+          name: Install dependencies
+          command: |
+            docker-compose exec tester python -m venv venv && \
+              source venv/bin/activate && \
+              python -m pip install --upgrade pip && \
+              python -m pip install "setuptools==57.4.0" && \
+              python -m pip install --upgrade wheel && \
+              pip install --use-feature=2020-resolver -e ".[dev]" && \
+              pip install -U spacy && \
+              python -m spacy download en_core_web_sm
+  service-images:
     docker:
-      - image: cimg/python:3.8.12-browsers
+      - image: cimg/python@3.9.9
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
-      - image: cimg/postgres:12.9
-        # Doesn't seem to expose port config option. Consider docker compose if default port 5432 is not useable.
+      - image: cimg/postgres@12.9
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
-        name: postgres
         environment:
           POSTGRES_DB: sl_pg
           POSTGRES_HOST: localhost
           POSTGRES_USER: test
           POSTGRES_PASSWORD: test
-        # command: --health-cmd pg_isready --health-interval 3s --health-timeout 3s --health-retries 15
+          PGPORT: 5534
       - image: rethinkdb:2.4.0
         auth:
           username: $DOCKERHUB_USER
@@ -82,8 +88,8 @@ jobs:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
         environment:
-          INFLUXDB_HTTP_BIND_ADDRESS: 127.0.0.1:8086
-      - image: elasticsearch:7.17.0   # Updated image version scanned for Log4Shell CVE https://hub.docker.com/_/elasticsearch?tab=tags&page=1&name=7.
+          INFLUXDB_HTTP_BIND_ADDRESS: 8086
+      - image: elasticsearch:7.17.0
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
@@ -91,17 +97,32 @@ jobs:
           discovery.type: single-node
           ES_JAVA_OPTS: "-Xms256m -Xmx256m"
           http.port: 9222
-      - image: tomgeorge/sleep-infinity:latest
     steps:
       - checkout
+      - run:
+          name: Test Postgres connection
+          environment:
+            DISABLE_PSQL_SSL: true
+            SL_BASE: ..
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+            psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql
       - install-dependencies
-
   machine-test:
     machine:
       image: ubuntu-2004:202201-02
+      docker_layer_caching: true
     steps:
       - checkout
-      - set-python-version
+      - run: 
+          name: Set Python version
+          command: |
+            python --version
+            pyenv versions
+            pyenv install 3.9.9
+            pyenv global 3.9.9
+      - run: python --version
       - install-dependencies
       - test-compose
 
@@ -109,6 +130,6 @@ workflows:
   version: 2
   run-tests:
     jobs:
-      # - test
-      - machine-test
+      - docker-compose
+      - service-images
       
