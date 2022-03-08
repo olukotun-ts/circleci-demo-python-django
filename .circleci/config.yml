@@ -31,7 +31,7 @@ commands:
           command: |
             docker-compose run tester sudo apt-get update && \
               sudo apt-get install -y postgresql-client && \
-              psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql
+              psql postgresql://test:test@0.0.0.0:5534/sl_pg < .circleci/test-db/schema.sql
 
 jobs:
   docker-docker-compose:
@@ -79,6 +79,7 @@ jobs:
         name: rethinkdb-backend
         environment:
           driver.port: 5555
+        command: ["--driver-port", "5555"]
       - image: rethinkdb:2.4.0
         auth:
           username: $DOCKERHUB_USER
@@ -91,7 +92,7 @@ jobs:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
         environment:
-          INFLUXDB_HTTP_BIND_ADDRESS: localhost:8086
+          INFLUXDB_HTTP_BIND_ADDRESS: 0.0.0.0:18086 # Change to 8086
       - image: elasticsearch:7.17.0
         auth:
           username: $DOCKERHUB_USER
@@ -110,7 +111,7 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install -y postgresql-client
-            psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql
+            psql postgresql://test:test@0.0.0.0:5534/sl_pg < .circleci/test-db/schema.sql
       - install-dependencies
   machine-docker-compose-with-cache:
     machine:
