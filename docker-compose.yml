@@ -12,7 +12,6 @@ services:
 
   postgres:
     image: cimg/postgres:12.9    
-    hostname: postgres
     ports:
       - "5534:5534"
     environment:
