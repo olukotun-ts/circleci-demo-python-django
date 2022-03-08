@@ -39,13 +39,13 @@ jobs:
             SL_BASE: ..
           command: |
             docker-compose up -d
-            docker-compose exec tester sudo apt-get update && \
+            docker-compose run tester sudo apt-get update && \
               sudo apt-get install -y postgresql-client && \
               psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql && \
       - run:
           name: Install dependencies
           command: |
-            docker-compose exec tester python -m venv venv && \
+            docker-compose run tester python -m venv venv && \
               source venv/bin/activate && \
               python -m pip install --upgrade pip && \
               python -m pip install "setuptools==57.4.0" && \
@@ -59,7 +59,7 @@ jobs:
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
-      - image: cimg/postgres@12.9
+      - image: cimg/postgres:12.9
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
