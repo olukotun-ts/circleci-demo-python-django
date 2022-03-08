@@ -29,9 +29,10 @@ commands:
             DISABLE_PSQL_SSL: true
             SL_BASE: ..
           command: |
-            docker-compose run tester sudo apt-get update && \
+            docker-compose up -d
+            docker-compose exec tester sudo apt-get update && \
               sudo apt-get install -y postgresql-client && \
-              psql postgresql://test:test@0.0.0.0:5534/sl_pg < .circleci/test-db/schema.sql
+              psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql
 
 jobs:
   docker-docker-compose:
@@ -44,11 +45,20 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - checkout
-      - test-postgres-connection
+      - run:
+          name: Test Postgres connection
+          environment:
+            DISABLE_PSQL_SSL: true
+            SL_BASE: ..
+          command: |
+            docker-compose up -d
+            docker-compose exec tester sudo apt-get update && \
+              sudo apt-get install -y postgresql-client && \
+              psql postgresql://test:test@postgres:5534/sl_pg < .circleci/test-db/schema.sql
       - run:
           name: Install dependencies
           command: |
-            docker-compose run tester python -m venv venv && \
+            docker-compose exec tester python -m venv venv && \
               source venv/bin/activate && \
               python -m pip install --upgrade pip && \
               python -m pip install "setuptools==57.4.0" && \
@@ -73,24 +83,23 @@ jobs:
           POSTGRES_PASSWORD: test
           PGPORT: 5534
       - image: rethinkdb:2.4.0
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD
         name: rethinkdb-backend
-        command: ["rethinkdb", "--driver-port", "5555"]
-      - image: rethinkdb:2.4.0
+        command: ["rethinkdb", "--bind", "all", "--driver-port", "5555"]
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
+      - image: rethinkdb:2.4.0
         name: rethinkdb-frontend
-        environment:
-          driver.port: 5550
+        command: ["rethinkdb", "--bind", "all", "--driver-port", "5550"]
+        auth:
+          username: $DOCKERHUB_USER
+          password: $DOCKERHUB_PASSWORD
       - image: influxdb:1.8-alpine
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
         environment:
-          INFLUXDB_HTTP_BIND_ADDRESS: 0.0.0.0:18086 # Change to 8086
+          INFLUXDB_HTTP_BIND_ADDRESS: 0.0.0.0:8086
       - image: elasticsearch:7.17.0
         auth:
           username: $DOCKERHUB_USER
