@@ -31,7 +31,7 @@ commands:
           command: |
             docker-compose run tester sudo apt-get update && \
               sudo apt-get install -y postgresql-client && \
-              psql postgresql://test:test@postgres:5534 < .circleci/test-db/schema.sql
+              psql postgresql://test:test@postgres:5534/sl_pg < .circleci/test-db/schema.sql
 
 jobs:
   docker-docker-compose:
@@ -110,7 +110,7 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install -y postgresql-client
-            psql postgresql://test:test@localhost:5534 < .circleci/test-db/schema.sql
+            psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql
       - install-dependencies
   machine-docker-compose-with-cache:
     machine:
