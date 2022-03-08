@@ -77,9 +77,7 @@ jobs:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
         name: rethinkdb-backend
-        environment:
-          driver.port: 5555
-        command: ["--driver-port", "5555"]
+        command: ["rethinkdb", "--driver-port", "5555"]
       - image: rethinkdb:2.4.0
         auth:
           username: $DOCKERHUB_USER
