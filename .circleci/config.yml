@@ -21,6 +21,18 @@ commands:
           key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
           paths:
             - venv
+  test-postgres-connection:
+    steps:
+      - run:
+          name: Test Postgres connection
+          environment:
+            DISABLE_PSQL_SSL: true
+            SL_BASE: ..
+          command: |
+            docker-compose run tester sudo apt-get update && \
+              sudo apt-get install -y postgresql-client && \
+              psql postgresql://test:test@postgres:5534 < .circleci/test-db/schema.sql
+
 jobs:
   docker-compose:
     docker:
@@ -32,16 +44,7 @@ jobs:
       - setup_remote_docker:
           docker_layer_caching: true
       - checkout
-      - run:
-          name: Test Postgres connection
-          environment:
-            DISABLE_PSQL_SSL: true
-            SL_BASE: ..
-          command: |
-            docker-compose up -d
-            docker-compose run tester sudo apt-get update && \
-              sudo apt-get install -y postgresql-client && \
-              psql postgresql://test:test@postgres:5534/sl_pg < .circleci/test-db/schema.sql
+      - test-postgres-connection
       - run:
           name: Install dependencies
           command: |
@@ -107,9 +110,9 @@ jobs:
           command: |
             sudo apt-get update
             sudo apt-get install -y postgresql-client
-            psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql
+            psql postgresql://test:test@postgres:5534 < .circleci/test-db/schema.sql
       - install-dependencies
-  machine-test:
+  machine-docker-compose-with-cache:
     machine:
       image: ubuntu-2004:202201-02
       docker_layer_caching: true
@@ -123,13 +126,41 @@ jobs:
             pyenv install 3.9.9
             pyenv global 3.9.9
       - run: python --version
-      - install-dependencies
       - test-compose
+      - install-dependencies
+  machine-docker-compose-no-cache:
+    machine:
+      image: ubuntu-2004:202201-02
+      docker_layer_caching: true
+    steps:
+      - checkout
+      - run: 
+          name: Set Python version
+          command: |
+            python --version
+            pyenv versions
+            pyenv install 3.9.9
+            pyenv global 3.9.9
+      - run: python --version
+      - test-postgres-connection
+      - run:
+          name: Install dependencies
+          command: |
+            python -m venv venv
+            source venv/bin/activate
+            python -m pip install --upgrade pip
+            python -m pip install "setuptools==57.4.0"
+            python -m pip install --upgrade wheel
+            pip install --use-feature=2020-resolver -e ".[dev]"
+            pip install -U spacy
+            python -m spacy download en_core_web_sm
 
 workflows:
   version: 2
   run-tests:
     jobs:
-      - docker-compose
-      - service-images
+      - docker-service-images
+      - docker-docker-compose
+      - machine-docker-compose-no-cache
+      - machine-docker-compose-with-cache
       

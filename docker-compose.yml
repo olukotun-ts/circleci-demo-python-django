@@ -11,7 +11,10 @@ services:
         condition: service_healthy
 
   postgres:
-    image: cimg/postgres:12.9
+    image: cimg/postgres:12.9    
+    hostname: postgres
+    ports:
+      - "5534:5534"
     environment:
       POSTGRES_DB: sl_pg
       POSTGRES_HOST: localhost
