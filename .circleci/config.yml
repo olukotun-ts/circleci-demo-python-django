@@ -34,7 +34,7 @@ commands:
               psql postgresql://test:test@postgres:5534 < .circleci/test-db/schema.sql
 
 jobs:
-  docker-compose:
+  docker-docker-compose:
     docker:
       - image: cimg/base:stable
         auth:
@@ -56,7 +56,7 @@ jobs:
               pip install --use-feature=2020-resolver -e ".[dev]" && \
               pip install -U spacy && \
               python -m spacy download en_core_web_sm
-  service-images:
+  docker-service-images:
     docker:
       - image: cimg/python:3.9.9
         auth:
