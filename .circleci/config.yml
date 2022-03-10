@@ -14,7 +14,6 @@ jobs:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
       - image: cimg/postgres:12.9
-        command: ["postgres", "--health-cmd", "pg_isready", "--health-interval", "3s", "--health-timeout", "3s", "--health-retries", "15"]
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
