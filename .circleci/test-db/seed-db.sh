@@ -9,7 +9,7 @@
 DIR=".circleci/test-db"
 
 # Database Variable Definitions
-DATABASE="sl_pg"
+DATABASE="circle_test"
 USER="test"
 
 # Output Filename for Faker File

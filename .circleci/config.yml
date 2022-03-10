@@ -1,86 +1,27 @@
 version: 2.1
-
-commands:
-  install-dependencies:
-    steps:
-      - restore_cache:
-          key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
-      - run: python --version
-      - run:
-          name: Install dependencies
-          command: |
-            python -m venv venv
-            source venv/bin/activate
-            python -m pip install --upgrade pip
-            python -m pip install "setuptools==57.4.0"
-            python -m pip install --upgrade wheel
-            pip install --use-feature=2020-resolver -e ".[dev]"
-            pip install -U spacy
-            python -m spacy download en_core_web_sm
-      - save_cache:
-          key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
-          paths:
-            - venv
-  test-postgres-connection:
-    steps:
-      - run:
-          name: Test Postgres connection
-          environment:
-            DISABLE_PSQL_SSL: true
-            SL_BASE: ..
-          command: |
-            docker-compose up -d
-            docker-compose exec tester sudo apt-get update && \
-              sudo apt-get install -y postgresql-client && \
-              psql postgresql://test:test@localhost:5534/sl_pg < .circleci/test-db/schema.sql
-
+  
+workflows:
+  version: 2
+  run-tests:
+    jobs:
+      - test
+      
 jobs:
-  docker-docker-compose:
-    docker:
-      - image: cimg/base:stable
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD
-    steps:
-      - setup_remote_docker:
-          docker_layer_caching: true
-      - checkout
-      - run:
-          name: Test Postgres connection
-          environment:
-            DISABLE_PSQL_SSL: true
-            SL_BASE: ..
-          command: |
-            docker-compose up -d
-            docker-compose exec tester sudo apt-get update && \
-              sudo apt-get install -y postgresql-client && \
-              psql postgresql://test:test@postgres:5534/sl_pg < .circleci/test-db/schema.sql
-      - run:
-          name: Install dependencies
-          command: |
-            docker-compose exec tester python -m venv venv && \
-              source venv/bin/activate && \
-              python -m pip install --upgrade pip && \
-              python -m pip install "setuptools==57.4.0" && \
-              python -m pip install --upgrade wheel && \
-              pip install --use-feature=2020-resolver -e ".[dev]" && \
-              pip install -U spacy && \
-              python -m spacy download en_core_web_sm
-  docker-service-images:
+  test:
     docker:
       - image: cimg/python:3.9.9
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
       - image: cimg/postgres:12.9
+        command: ["--health-cmd", "pg_isready", "--health-interval", "3s", "--health-timeout", "3s", "--health-retries", "15"]
         auth:
           username: $DOCKERHUB_USER
           password: $DOCKERHUB_PASSWORD
         environment:
-          POSTGRES_DB: sl_pg
-          POSTGRES_HOST: localhost
-          POSTGRES_USER: test
-          POSTGRES_PASSWORD: test
+          POSTGRES_DB: test_db
+          POSTGRES_USER: db_user
+          POSTGRES_PASSWORD: db_password
           PGPORT: 5534
       - image: rethinkdb:2.4.0
         name: rethinkdb-backend
@@ -111,46 +52,15 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Test Postgres connection
+          name: Check Postgres connection
           environment:
             DISABLE_PSQL_SSL: true
-            SL_BASE: ..
           command: |
             sudo apt-get update
             sudo apt-get install -y postgresql-client
-            psql postgresql://test:test@0.0.0.0:5534/sl_pg < .circleci/test-db/schema.sql
-      - install-dependencies
-  machine-docker-compose-with-cache:
-    machine:
-      image: ubuntu-2004:202201-02
-      docker_layer_caching: true
-    steps:
-      - checkout
-      - run: 
-          name: Set Python version
-          command: |
-            python --version
-            pyenv versions
-            pyenv install 3.9.9
-            pyenv global 3.9.9
-      - run: python --version
-      - test-postgres-connection
-      - install-dependencies
-  machine-docker-compose-no-cache:
-    machine:
-      image: ubuntu-2004:202201-02
-      docker_layer_caching: true
-    steps:
-      - checkout
-      - run: 
-          name: Set Python version
-          command: |
-            python --version
-            pyenv versions
-            pyenv install 3.9.9
-            pyenv global 3.9.9
-      - run: python --version
-      - test-postgres-connection
+            psql postgresql://db_user:db_password@0.0.0.0:5534/test_db < .circleci/test-db/schema.sql
+      - restore_cache:
+          key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
       - run:
           name: Install dependencies
           command: |
@@ -162,13 +72,7 @@ jobs:
             pip install --use-feature=2020-resolver -e ".[dev]"
             pip install -U spacy
             python -m spacy download en_core_web_sm
-
-workflows:
-  version: 2
-  run-tests:
-    jobs:
-      - docker-service-images
-      - docker-docker-compose
-      - machine-docker-compose-no-cache
-      - machine-docker-compose-with-cache
-      
+      - save_cache:
+          key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
+          paths:
+            - venv
