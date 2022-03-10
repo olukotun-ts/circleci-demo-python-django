@@ -39,6 +39,10 @@ jobs:
           - 9222:9200
         options: -e="discovery.type=single-node" -e="ES_JAVA_OPTS=-Xms256m -Xmx256m"
     steps:
+      - name: Set up Python 3.9.9
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9.9
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Cache dependencies
