@@ -60,7 +60,7 @@ jobs:
           python -m pip install "setuptools==57.4.0"
           python -m pip install --upgrade wheel
           pip install --use-feature=2020-resolver -e ".[dev]"
-          python -m spacy download en_core_web_sm
+          # python -m spacy download en_core_web_sm
       - name: Check Postgres connection
         env:
           DISABLE_PSQL_SSL: true
