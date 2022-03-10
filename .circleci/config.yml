@@ -58,20 +58,24 @@ jobs:
             sudo apt-get update
             sudo apt-get install -y postgresql-client
             psql postgresql://db_user:db_password@0.0.0.0:5534/test_db < .circleci/test-db/schema.sql
-      - restore_cache:
-          key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
+      # - restore_cache:
+      #     key: deps-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
       - run:
           name: Install dependencies
           command: |
-            python -m venv venv
-            source venv/bin/activate
-            python -m pip install --upgrade pip
-            python -m pip install "setuptools==57.4.0"
-            python -m pip install --upgrade wheel
+            # python -m pip install --upgrade pip
+            # python -m pip install "setuptools==57.4.0"
+            # python -m pip install --upgrade wheel
+            pip install --upgrade pip
+            pip install "setuptools==57.4.0"
+            pip install --upgrade wheel
             pip install --use-feature=2020-resolver -e ".[dev]"
             pip install -U spacy
             # python -m spacy download en_core_web_sm
-      - save_cache:
-          key: venv-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
-          paths:
-            - venv
+      - run:
+          name: List install location for dependencies
+          command: pip list -v
+      # - save_cache:
+      #     key: deps-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
+      #     paths:
+      #       - usr/local/bin
