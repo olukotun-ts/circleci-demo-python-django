@@ -68,11 +68,10 @@ jobs:
       - run:
           name: Install dependencies
           command: |
-            pip install --upgrade pip
-            pip install "setuptools==57.4.0"
-            pip install --upgrade wheel
-            pip install --use-feature=2020-resolver -e ".[dev]"
-            pip install spacy
+            python -m pip install --upgrade pip
+            python -m pip install "setuptools==57.4.0"
+            python -m pip install --upgrade wheel
+            python -m pip install spacy
             # python -m spacy download en_core_web_sm
       - save_cache:
           key: deps-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
