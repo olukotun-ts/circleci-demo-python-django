@@ -59,7 +59,7 @@ jobs:
             sudo apt-get install -y postgresql-client
             psql postgresql://db_user:db_password@0.0.0.0:5534/test_db < .circleci/test-db/schema.sql
       - restore_cache:
-          key: deps-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
+          key: deps-python-${{ .Branch }}-${{ checksum "setup.py" }}
       - run:
           name: Install dependencies
           command: |
@@ -71,6 +71,6 @@ jobs:
             python -m pip install spacy
             # python -m spacy download en_core_web_sm
       - save_cache:
-          key: deps-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
+          key: deps-python-${{ .Branch }}-${{ checksum "setup.py" }}
           paths:
             - venv
