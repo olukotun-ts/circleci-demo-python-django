@@ -61,13 +61,10 @@ jobs:
       - restore_cache:
           key: deps-${{ arch }}-${{ .Branch }}-${{ checksum "setup.py" }}
       - run:
-          name: Set up virtual environment
+          name: Install dependencies
           command: |
             python -m venv venv
             source venv/bin/activate
-      - run:
-          name: Install dependencies
-          command: |
             python -m pip install --upgrade pip
             python -m pip install "setuptools==57.4.0"
             python -m pip install --upgrade wheel
