@@ -53,13 +53,13 @@ jobs:
       - name: Install dependencies
         if: steps.dependency-cache.outputs.cache-hit != 'true'
         run: |
-          python -m venv venv
-          echo "Source command: $(which source)"
+          echo "Source command: $(type source)"
+          # python -m venv venv
           # source venv/bin/activate
-          python -m pip install --upgrade pip
-          python -m pip install "setuptools==57.4.0"
-          python -m pip install --upgrade wheel
-          python -m pip install spacy
+          pip install --upgrade pip
+          pip install "setuptools==57.4.0"
+          pip install --upgrade wheel
+          pip install spacy
       - name: Check Postgres connection
         env:
           DISABLE_PSQL_SSL: true
