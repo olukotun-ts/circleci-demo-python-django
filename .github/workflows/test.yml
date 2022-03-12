@@ -54,6 +54,7 @@ jobs:
         if: steps.dependency-cache.outputs.cache-hit != 'true'
         run: |
           python -m venv venv
+          chmod +x venv
           source venv/bin/activate
           python -m pip install --upgrade pip
           python -m pip install "setuptools==57.4.0"
