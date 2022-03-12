@@ -5,7 +5,6 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-    container: python:3.9.9
     services:
       postgres:
         image: postgres:12.9
@@ -38,10 +37,10 @@ jobs:
           - 9222:9200
         options: -e="discovery.type=single-node" -e="ES_JAVA_OPTS=-Xms256m -Xmx256m"
     steps:
-      # - name: Set up Python
-      #   uses: actions/setup-python@v1
-      #   with:
-      #     python-version: 3.9.10
+      - name: Set up Python
+        uses: actions/setup-python@v1
+        with:
+          python-version: 3.9.10
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Cache dependencies
@@ -53,17 +52,16 @@ jobs:
       - name: Install dependencies
         if: steps.dependency-cache.outputs.cache-hit != 'true'
         run: |
-          echo "Shell: $SHELL"
           python -m venv venv
           . ./venv/bin/activate
-          pip install --upgrade pip
-          pip install "setuptools==57.4.0"
-          pip install --upgrade wheel
-          pip install spacy
+          python -m pip install --upgrade pip
+          python -m pip install "setuptools==57.4.0"
+          python -m pip install --upgrade wheel
+          python -m pip install spacy
       - name: Check Postgres connection
         env:
           DISABLE_PSQL_SSL: true
         run: |
-          apt-get update
-          apt-get install -y postgresql-client
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
           psql postgresql://db_user:db_password@0.0.0.0:5534/test_db < .circleci/test-db/schema.sql
