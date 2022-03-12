@@ -33,9 +33,11 @@ jobs:
           - 8086:8086
       elasticsearch:
         image: elasticsearch:7.12.1
+        env:
+          discovery.type: single-node
+          ES_JAVA_OPTS: "-Xms256m -Xmx256m"
         ports:
           - 9222:9200
-        options: -e="discovery.type=single-node" -e="ES_JAVA_OPTS=-Xms256m -Xmx256m"
     steps:
       - name: Set up Python
         uses: actions/setup-python@v1
@@ -47,7 +49,7 @@ jobs:
         id: dependency-cache
         uses: actions/cache@v2
         with:
-          key: venv-${{ runner.os }}-${{ hashFiles('setup.py') }}
+          key: deps-python-${{ hashFiles('setup.py') }}
           path: venv
       - name: Install dependencies
         if: steps.dependency-cache.outputs.cache-hit != 'true'
