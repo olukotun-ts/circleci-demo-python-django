@@ -53,16 +53,10 @@ jobs:
       - name: Install dependencies
         if: steps.dependency-cache.outputs.cache-hit != 'true'
         run: |
-          echo 1        
           python -m venv venv
-          ls -al
-          echo 2          
-          chmod +x venv
-          echo 3          
-          source venv/bin/activate
-          echo 4
+          echo "Source command: $(which source)"
+          # source venv/bin/activate
           python -m pip install --upgrade pip
-          echo 5
           python -m pip install "setuptools==57.4.0"
           python -m pip install --upgrade wheel
           python -m pip install spacy
