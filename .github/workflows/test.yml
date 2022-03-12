@@ -5,8 +5,7 @@ on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
-    # container: python:3.9.9
-    timeout-minutes: 20
+    container: python:3.9.9
     services:
       postgres:
         image: postgres:12.9
@@ -39,18 +38,18 @@ jobs:
           - 9222:9200
         options: -e="discovery.type=single-node" -e="ES_JAVA_OPTS=-Xms256m -Xmx256m"
     steps:
-      - name: Set up Python
-        uses: actions/setup-python@v1
-        with:
-          python-version: 3.9.10  # 3.9.9 not supported
+      # - name: Set up Python
+      #   uses: actions/setup-python@v1
+      #   with:
+      #     python-version: 3.9.10
       - name: Checkout code
         uses: actions/checkout@v2
       - name: Cache dependencies
         id: dependency-cache
         uses: actions/cache@v2
         with:
-          path: venv
           key: venv-${{ runner.os }}-${{ hashFiles('setup.py') }}
+          path: venv
       - name: Install dependencies
         if: steps.dependency-cache.outputs.cache-hit != 'true'
         run: |
@@ -59,8 +58,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install "setuptools==57.4.0"
           python -m pip install --upgrade wheel
-          pip install --use-feature=2020-resolver -e ".[dev]"
-          # python -m spacy download en_core_web_sm
+          python -m pip install spacy
       - name: Check Postgres connection
         env:
           DISABLE_PSQL_SSL: true
