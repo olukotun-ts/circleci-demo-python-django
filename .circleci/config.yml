@@ -51,7 +51,7 @@ jobs:
     steps:
       - checkout
       - restore_cache:
-          key: deps-python-${{ .Branch }}-${{ checksum "setup.py" }}
+          key: deps-dockerhub-${{ .Branch }}-${{ checksum "setup.py" }}
       - run:
           name: Install dependencies
           command: |
@@ -62,7 +62,7 @@ jobs:
             python -m pip install --upgrade wheel
             python -m pip install spacy
       - save_cache:
-          key: deps-python-${{ .Branch }}-${{ checksum "setup.py" }}
+          key: deps-dockerhub-${{ .Branch }}-${{ checksum "setup.py" }}
           paths:
             - venv
       - run:
@@ -70,6 +70,6 @@ jobs:
           environment:
             DISABLE_PSQL_SSL: true
           command: |
-            sudo apt-get update
-            sudo apt-get install -y postgresql-client
+            apt-get update
+            apt-get install -y postgresql-client
             psql postgresql://db_user:db_password@0.0.0.0:5534/test_db < .circleci/test-db/schema.sql
