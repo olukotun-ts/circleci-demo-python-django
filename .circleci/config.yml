@@ -20,15 +20,15 @@ jobs:
         name: rethinkdb-backend
         # command: ["rethinkdb", "--bind", "all", "--driver-port", "5555"]
         command:
-          - "rethinkdb"
-          - "--bind"
-          - "all"
-          - "--driver-port"
-          - "15555"
+          - rethinkdb
+          - --bind
+          - all
+          - --driver-port
+          - 15555
       - image: rethinkdb:2.4.0
         name: rethinkdb-frontend
         # command: ["rethinkdb", "--bind", "all", "--driver-port", "5550"]
-        command: "rethinkdb --bind all --driver-port 15550"
+        command: rethinkdb --bind all --driver-port 15550"
       - image: influxdb:1.8-alpine
         environment:
           INFLUXDB_HTTP_BIND_ADDRESS: 0.0.0.0:8086
