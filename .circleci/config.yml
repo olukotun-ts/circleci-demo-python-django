@@ -10,13 +10,7 @@ jobs:
   test:
     docker:
       - image: python:3.9.10
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD
       - image: cimg/postgres:12.9
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD
         environment:
           POSTGRES_DB: test_db
           POSTGRES_USER: db_user
@@ -24,26 +18,21 @@ jobs:
           PGPORT: 5534
       - image: rethinkdb:2.4.0
         name: rethinkdb-backend
-        command: ["rethinkdb", "--bind", "all", "--driver-port", "5555"]
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD
+        # command: ["rethinkdb", "--bind", "all", "--driver-port", "5555"]
+        command:
+          - "rethinkdb"
+          - "--bind"
+          - "all"
+          - "--driver-port"
+          - "15555"
       - image: rethinkdb:2.4.0
         name: rethinkdb-frontend
-        command: ["rethinkdb", "--bind", "all", "--driver-port", "5550"]
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD
+        # command: ["rethinkdb", "--bind", "all", "--driver-port", "5550"]
+        command: "rethinkdb --bind all --driver-port 15550"
       - image: influxdb:1.8-alpine
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD
         environment:
           INFLUXDB_HTTP_BIND_ADDRESS: 0.0.0.0:8086
       - image: elasticsearch:7.17.0
-        auth:
-          username: $DOCKERHUB_USER
-          password: $DOCKERHUB_PASSWORD
         environment:
           discovery.type: single-node
           ES_JAVA_OPTS: "-Xms256m -Xmx256m"
