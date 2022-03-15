@@ -1,12 +1,4 @@
 -- schema.sql
--- Since we might run the import many times we'll drop if exists
-DROP DATABASE IF EXISTS sl_pg;
-
-CREATE DATABASE sl_pg;
-
--- Make sure we're using our `sl_pg` database
-\c sl_pg;
-
 -- We can create our user table
 CREATE TABLE IF NOT EXISTS user (
   id SERIAL PRIMARY KEY,
